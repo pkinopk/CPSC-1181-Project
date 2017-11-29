@@ -31,7 +31,7 @@ public class Client extends JFrame implements Runnable, Encryptable {
 	private DataInputStream fromServer;
 
 	// display the blank as a dot
-	private char BLANK = '.';
+	// private char BLANK = '.';
 
 	JTextField f1;
 	JTextField f2;
@@ -69,7 +69,7 @@ public class Client extends JFrame implements Runnable, Encryptable {
 	 */
 	@Override
 	public void run() {
-		openConnection("10.65.32.155");
+		openConnection(HOST);
 
 		try {
 

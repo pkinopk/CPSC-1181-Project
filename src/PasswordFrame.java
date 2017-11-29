@@ -3,22 +3,68 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class PasswordFrame extends JFrame {
+public class PasswordFrame extends JFrame implements Runnable, Encryptable {
 	private JLabel display;
 	private String tryPass;
 	private JLabel msg;
 	private boolean myTurn;
 	private int iAmPlayer;
 
+	private Socket socket;
+	private DataOutputStream toServer;
+	private DataInputStream fromServer;
+
 	private static final int FRAME_WIDTH = 450;
 	private static final int FRAME_HEIGHT = 300;
 	private static final int NUMBER_OF_DIGITS = 3;
+
+	public static void main(String[] args) {
+
+		PasswordFrame game = new PasswordFrame();
+		game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		game.setTitle("Guess the password");
+		game.setLocationRelativeTo(null);
+		game.setVisible(true);
+
+		PasswordFrame player = new PasswordFrame();
+		Thread thread = new Thread(player);
+
+		thread.start();
+
+	}
+
+	@Override
+	public void run() {
+		openConnection(HOST);
+
+		try {
+
+			int n = fromServer.readInt();
+			System.out.println("Command: " + n + " - " + cmdToString(n));
+			System.out.println("Your number is: " + fromServer.readInt());
+			n = fromServer.readInt();
+			System.out.println("Command: " + n + " - " + cmdToString(n));
+			System.out.println("Server is sending " + fromServer.readInt() + " characters");
+			for (int i = 0; i < 5; i++) {
+				System.out.println(fromServer.readChar());
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
 
 	public PasswordFrame() {
 		tryPass = "";
@@ -66,7 +112,12 @@ public class PasswordFrame extends JFrame {
 		}
 
 		public void actionPerformed(ActionEvent event) {
-			if (tryPass == "" || tryPass.length() < NUMBER_OF_DIGITS) // TODO here check for max digits
+			if (tryPass == "" || tryPass.length() < NUMBER_OF_DIGITS) // TODO
+																		// here
+																		// check
+																		// for
+																		// max
+																		// digits
 				tryPass += digit;
 
 			display.setText(tryPass);
@@ -153,4 +204,22 @@ public class PasswordFrame extends JFrame {
 		this.tryPass = "";
 		this.display.setText("");
 	}
+
+	private void openConnection(String serverHost) {
+		try {
+			this.socket = new Socket(serverHost, PORT);
+			this.fromServer = new DataInputStream(socket.getInputStream());
+			this.toServer = new DataOutputStream(socket.getOutputStream());
+		} catch (SecurityException e) {
+			System.err.print("a security manager exists: ");
+			System.err.println("its checkConnect doesn't allow the connection");
+			System.err.println("without a SERVER, I'm toast ... no point going on so bye, bye");
+		} catch (UnknownHostException e) {
+			System.err.println("the IP address of the host could not be found...cannot go on, bye");
+		} catch (IOException e) {
+			System.err.println("cannot seem to be able to connect to the server \"" + serverHost + "\"");
+			System.err.println("without a SERVER, I'm toast ... no point going on so bye, bye");
+		}
+
+	} // openConnection
 }
